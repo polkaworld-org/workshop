@@ -1,1 +1,1 @@
-# workshop
+# PolkaWorld workshop
