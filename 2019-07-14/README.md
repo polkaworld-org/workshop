@@ -3,6 +3,7 @@
 <!-- TOC GFM -->
 
 * [环境准备](#环境准备)
+    * [编译 Substrate](#编译-substrate)
     * [WASM 构建环境](#wasm-构建环境)
     * [安装 ink!](#安装-ink)
         * [直接安装二进制](#直接安装二进制)
@@ -11,9 +12,11 @@
 
 <!-- /TOC -->
 
-本次 workshop 主要会跟大家分享一下 substrate 智能合约的相关内容。
-
 ## 环境准备
+
+### 编译 Substrate
+
+参见 [Hacking on Substrate](https://github.com/paritytech/substrate#building)
 
 ### WASM 构建环境
 
