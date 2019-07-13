@@ -6,6 +6,11 @@ use ink_lang::contract;
 contract! {
     #![env = ink_core::env::DefaultSrmlTypes]
 
+    event Register {
+        admin: AccountId,
+        permission: bool,
+    }
+
     /// This simple dummy contract has a `bool` value that can
     /// alter between `true` and `false` using the `flip` message.
     /// Users can retrieve its current state using the `get` message.
@@ -32,6 +37,7 @@ contract! {
             let is_permissioned_admin = self.admins.get(&caller).map(|x|*x).unwrap_or(false);
             if is_owner || is_permissioned_admin {
                 *self.value = !*self.value;
+                env.println(&format!("Storage Value is flipped from {:?} to {:?} by caller: {:?}", !*self.value, *self.value, caller));
                 true
             } else {
                 env.println(&format!("Only the admin and owner of this smart contract can flip!"));
@@ -54,17 +60,20 @@ contract! {
 
         /// Return if it's an admin of this smart contract.
         pub(external) fn is_admin(&self, who: AccountId) -> (bool, Option<bool>) {
-            if self.admins.get(&who).is_some() {
-                (true, Some(self.admins.get(&who).map(|x| *x).unwrap()))
+            if let Some(permission) = self.admins.get(&who) {
+                env.println(&format!("Admin: {:?}, permission {:?}", who, permission));
+                (true, Some(*permission))
             } else {
+                env.println(&format!("Account {:?} is not an admin", who));
                 (false, None)
             }
         }
 
         /// Set the new permission of some admin.
         pub(external) fn set_permission(&mut self, who: AccountId, new_permission: bool) {
-            if self.owner != env.caller() {
-                env.println(&format!("Only the owner of this smart contract can set permission, current owner: {:?}", *self.owner));
+            let caller = env.caller();
+            if self.owner != caller {
+                env.println(&format!("Only the owner of this smart contract can set permission, current owner: {:?}, current caller: {:?}", *self.owner, caller));
                 return;
             }
             if self.admins.get(&who).is_none() {
@@ -77,7 +86,7 @@ contract! {
         /// Register a new admin with the initial permission by the contract owner.
         pub(external) fn register(&mut self, who: AccountId, initial_permission: bool) {
             if self.owner != env.caller() {
-                env.println(&format!("Only the owner of this smart contract can set permission, current owner: {:?}", *self.owner));
+                env.println(&format!("Only the owner of this smart contract can set permission, current owner: {:?}, caller: {:?}", *self.owner, env.caller()));
                 return;
             }
             if self.admins.get(&who).is_some() {
@@ -85,6 +94,8 @@ contract! {
                 return;
             }
             self.admins.insert(who, initial_permission);
+            env.println(&format!("The new admin: {:?}, permission: {:?}", who, self.admins.get(&who)));
+            env.emit(Register {admin: who, permission: initial_permission});
         }
 
         /// Remove an existing admin by the contract owner.
