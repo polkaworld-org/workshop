@@ -20,6 +20,8 @@
         * [1. 上传WASM合约代码: upload](#1-上传wasm合约代码-upload)
         * [2. 实例化合约账户: deploy](#2-实例化合约账户-deploy)
         * [3. 合约调用: execute](#3-合约调用-execute)
+* [Permissioned Flipper](#permissioned-flipper)
+* [合约进阶小练习](#合约进阶小练习)
 * [系统合约与用户合约](#系统合约与用户合约)
     * [Runtime模块交互](#runtime模块交互)
     * [可升级性](#可升级性)
@@ -125,6 +127,13 @@ cargo contract new flipper
 
 ```bash
 cargo test --features test-env
+```
+
+宏展开后的合约代码：
+
+```bash
+cargo rustc -- -Z unstable-options --pretty=expanded > flipper.rs
+rustfmt flipper.rs
 ```
 
 ### 编译合约
@@ -249,7 +258,7 @@ rm -rf $HOME/Library/Application Support/substrate/chains/dev/db
 
 https://polkadot.js.org/apps/#/contracts/code
 
-首先通过调用 contracts 模块的 `put_code`，上传WASM合约代码，后续通过 code_hash 使用。如果多个合约的逻辑安全一样，只有初始化参数，或者说合约的"构造函数"不一样，那么可以共用一份合约代码，减少链上存储。
+首先通过调用 contracts 模块的 `put_code`，上传WASM合约代码，后续通过 code_hash 使用。如果多个合约的逻辑安全一样，只有初始化参数或者说合约的"构造函数"不一样，那么可以共用一份逻辑代码，减少链上存储。
 
 #### 2. 实例化合约账户: deploy
 
@@ -259,20 +268,42 @@ https://polkadot.js.org/apps/#/contracts/code
 
 当合约账户被清除时，相关的代码和存储也会被存储。
 
+## Permissioned Flipper
+
+通过 ink! 创建的示例项目 flipper, 任何人都可以玩，参与游戏的权限是 permissionless, 那么如果我们想要改成 permissioned ，即这个合约可以有一个拥有者owner和几个管理员admin，只有这些管理员和拥有者才有权限 flip。
+
+练习代码在 [permissionedflipper](./permissionedflipper).
+
+## 合约进阶小练习
+
+加入”付费“元素. 除了 owner 和 admin, 如果一个用户拥有足够参与这个游戏的 token, 就可以执行 flip 操作。手续费 token 可以在 Flipper 合约中内置，参考 erc20 示例进行实现。除了自定义token, 等
+https://github.com/paritytech/ink/pull/124 合并以后，还可以直接使用系统代币 coin, 直接扣系统代币参与游戏 flip.
+
 ## 系统合约与用户合约
 
 - SRML
 - Contract
 
+```
+contract => contract storage
+runtime  => Blockchain storage
+```
+
 ### Runtime模块交互
 
-- 调用Runtime函数: https://github.com/paritytech/ink/pull/124
+- 调用Runtime函数
+
+    - https://github.com/paritytech/ink/pull/124
+    - https://github.com/paritytech/ink/pull/135
+
 - 读取Runtime存储
 
 ### 可升级性
 
 - Contract: 不可升级
 - SRML: 可升级
+
+系统合约升级 -> `set_code`
 
 References:
 
